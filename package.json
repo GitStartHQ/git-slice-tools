@@ -36,7 +36,7 @@
     "fs-extra": "^10.0.0",
     "glob": "^7.2.0",
     "nodemon": "^2.0.14",
-    "simple-git": "^2.47.0",
+    "simple-git": "^3.3.0",
     "terminal-kit": "^2.1.8",
     "ts-node": "^10.4.0",
     "yargs": "^17.2.1"
