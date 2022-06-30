@@ -1,46 +1,49 @@
 import { CleanOptions, ResetMode, SimpleGit } from 'simple-git'
 import { terminal } from 'terminal-kit'
-import { copyFiles, createCommitAndPushCurrentChanges, deleteSliceIgnoresFilesDirs } from '../common'
+import { copyFiles, createCommitAndPushCurrentChanges, deleteSliceIgnoresFilesDirs, logWrite } from '../common'
 import { ActionInputs } from '../types'
 
 export const pull = async (sliceGit: SimpleGit, upstreamGit: SimpleGit, actionInputs: ActionInputs): Promise<void> => {
     terminal('-'.repeat(30) + '\n')
     terminal('Performing pull job...\n')
 
-    terminal(`Upstream: Checkout and pull last versions '${actionInputs.upstreamRepo.defaultBranch}' branch...`)
+    let logExtend = logWrite(
+        'Upstream',
+        `Checkout and pull last versions '${actionInputs.upstreamRepo.defaultBranch}' branch...`
+    )
 
     await upstreamGit.reset(ResetMode.HARD)
     await upstreamGit.checkout(actionInputs.upstreamRepo.defaultBranch)
     await upstreamGit.reset(['--hard', `origin/${actionInputs.upstreamRepo.defaultBranch}`])
     await upstreamGit.pull('origin', actionInputs.upstreamRepo.defaultBranch)
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
-    terminal(`Upstream: Clean...`)
+    logExtend = logWrite('Upstream', `Clean...`)
 
     await upstreamGit.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE + CleanOptions.IGNORED_INCLUDED)
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
-    terminal(`Upstream: Get last commit oid...`)
+    logExtend = logWrite('Upstream', `Get last commit oid...`)
 
     const upstreamLastCommitId = await upstreamGit.revparse('HEAD')
 
-    terminal(`Done! -> ${upstreamLastCommitId}\n`)
+    logExtend(`Done! -> ${upstreamLastCommitId}`)
 
-    terminal(`Slice: Checkout and pull last versions '${actionInputs.sliceRepo.defaultBranch}' branch...`)
+    logExtend = logWrite('Slice', `Checkout and pull last versions '${actionInputs.sliceRepo.defaultBranch}' branch...`)
 
     await sliceGit.checkout(actionInputs.sliceRepo.defaultBranch)
     await sliceGit.reset(['--hard', `origin/${actionInputs.sliceRepo.defaultBranch}`])
     await sliceGit.pull('origin', actionInputs.sliceRepo.defaultBranch)
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
-    terminal(`Slice: Clean...`)
+    logExtend = logWrite('Slice', `Clean...`)
 
     await sliceGit.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE + CleanOptions.IGNORED_INCLUDED)
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
     await deleteSliceIgnoresFilesDirs(actionInputs.sliceIgnores, actionInputs.upstreamRepo.dir, 'Upstream')
 
@@ -63,5 +66,5 @@ export const pull = async (sliceGit: SimpleGit, upstreamGit: SimpleGit, actionIn
         )
     }
 
-    terminal(`Slice: Up to date\n`)
+    logWrite('Slice', `Up to date`)
 }

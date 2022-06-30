@@ -7,6 +7,28 @@ import { compareSync, DifferenceState, Reason } from 'dir-compare'
 
 export * from './gitInit'
 
+export type LogScope = 'Upstream' | 'Slice'
+
+export const logWrite = (scope: LogScope, content: string) => {
+    let now = new Date()
+
+    terminal(`\n[${now.toISOString()}] ${scope}: ${content}`)
+
+    return (contentExtending?: string) => {
+        if (!contentExtending) {
+            terminal(`\n`)
+            return
+        }
+
+        const current = new Date()
+        const duration = (current.getTime() - now.getTime()) / 1000
+
+        terminal(`${contentExtending.trim()} (${duration.toFixed(3)}s)`)
+
+        now = current
+    }
+}
+
 export const pullRemoteBranchIntoCurrentBranch = async (
     logPrefix: string,
     git: SimpleGit,
@@ -45,22 +67,21 @@ export const pullRemoteBranchIntoCurrentBranch = async (
 export const deleteSliceIgnoresFilesDirs = async (
     sliceIgnores: string[],
     rootDir: string,
-    logPrefix: string
+    scope: LogScope
 ): Promise<void> => {
     for (let i = 0; i < sliceIgnores.length; i++) {
         const pattern = sliceIgnores[i]
 
-        terminal(`${logPrefix}: Getting ingoring files/directores with pattern '${pattern}'...`)
+        let logExtend = logWrite(scope, `Getting ingoring files/directores with pattern '${pattern}'...`)
 
         const mg = new Glob(pattern, {
             cwd: rootDir,
             sync: true,
         })
 
-        terminal(`Found ${mg.found.length} files/directories!\n`)
+        logExtend(`Found ${mg.found.length} files/directories!`)
 
         if (mg.found.length === 0) {
-            terminal('\n')
             continue
         }
 
@@ -68,11 +89,11 @@ export const deleteSliceIgnoresFilesDirs = async (
             const pathMatch = mg.found[j]
             const resolvedPath = path.join(rootDir, pathMatch)
 
-            terminal(`${logPrefix}: Deleting: ${pathMatch}...`)
+            logExtend = logWrite(scope, `Deleting: ${pathMatch}...`)
 
             fs.rmSync(resolvedPath, { force: true, recursive: true })
 
-            terminal('Done!\n')
+            logExtend('Done!')
         }
     }
 }
@@ -81,42 +102,43 @@ export const createCommitAndPushCurrentChanges = async (
     git: SimpleGit,
     commitMsg: string,
     branch: string,
-    logPrefix: string,
+    scope: LogScope,
     forcePush = false
 ): Promise<boolean> => {
     const status = await git.status()
 
     if (status.files.length === 0) {
-        terminal(`${logPrefix}: No changes found\n`)
+        logWrite(scope, `No changes found`)()
 
         return false
     }
 
-    terminal(`${logPrefix}: Stage changes\n`)
+    logWrite(scope, `Stage changes`)
 
     await git.add('.')
 
-    terminal(
+    logWrite(
+        scope,
         [
             ...status.modified.map(x => ({ filePath: x, changeType: '~' })),
             ...status.deleted.map(x => ({ filePath: x, changeType: '-' })),
             ...status.created.map(x => ({ filePath: x, changeType: '+' })),
         ]
-            .map(x => `${logPrefix}: Commit (${x.changeType}) ${x.filePath}`)
+            .map(x => `${scope}: Commit (${x.changeType}) ${x.filePath}`)
             .join('\n') + '\n'
     )
 
-    terminal(`${logPrefix}: Creating '${commitMsg}' commit...`)
+    let logExtend = logWrite(scope, `Creating '${commitMsg}' commit...`)
 
     await git.commit(commitMsg)
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
-    terminal(`${logPrefix}: Pushing...`)
+    logExtend = logWrite(scope, `Pushing...`)
 
     await git.push('origin', branch, forcePush ? ['--force'] : [])
 
-    terminal('Done!\n')
+    logExtend('Done!')
 
     return true
 }
@@ -126,9 +148,9 @@ export const copyFiles = async (
     fromDir: string,
     toDir: string,
     sliceIgnores: string[],
-    logPrefix: string
+    scope: LogScope
 ): Promise<string[]> => {
-    terminal(`${logPrefix}: Copy files from '${fromDir}' to '${toDir}'...\n`)
+    logWrite(scope, `Copy files from '${fromDir}' to '${toDir}'...`)
 
     const compareResponse = compareSync(toDir, fromDir, {
         compareContent: true,
@@ -144,7 +166,7 @@ export const copyFiles = async (
     })
 
     if (!compareResponse.diffSet || compareResponse.diffSet.length === 0) {
-        terminal(`${logPrefix}: Found 0 diff file(s)!\n`)
+        logWrite(scope, `Found 0 diff file(s)!`)
 
         return []
     }
@@ -154,7 +176,7 @@ export const copyFiles = async (
     // Filter files only on left = to Dir
     const onlyOnToDirFiles = compareResponse.diffSet.filter(dif => dif.state === 'left')
 
-    terminal(`${logPrefix}: Found ${onlyOnToDirFiles.length} onlyOnToDir file(s)!\n`)
+    logWrite(scope, `Found ${onlyOnToDirFiles.length} onlyOnToDir file(s)!`)
 
     for (let i = 0; i < onlyOnToDirFiles.length; i++) {
         const diff = onlyOnToDirFiles[i]
@@ -162,12 +184,12 @@ export const copyFiles = async (
         const filePath = `${diff.relativePath.substring(1)}/${diff.name1}`
         const absPath = path.join(toDir, filePath)
 
-        terminal(`${logPrefix}: Deleting: ${filePath}...`)
+        const logExtend = logWrite(scope, `Deleting: ${filePath}...`)
 
         fs.rmSync(absPath, { force: true, recursive: true })
         fileChanges.push(absPath)
 
-        terminal('Done!\n')
+        logExtend('Done!')
     }
 
     const symlinkFiles: { filePath: string; targetLink: string; reason: Reason; state: DifferenceState }[] = []
@@ -179,7 +201,7 @@ export const copyFiles = async (
     // Filter files only on right = from Dir
     const onlyOnFromDirFiles = compareResponse.diffSet.filter(dif => dif.state === 'right')
 
-    terminal(`${logPrefix}: Found ${onlyOnFromDirFiles.length} onlyOnFromDir file(s)!\n`)
+    logWrite(scope, `Found ${onlyOnFromDirFiles.length} onlyOnFromDir file(s)!`)
 
     for (let i = 0; i < onlyOnFromDirFiles.length; i++) {
         const diff = onlyOnFromDirFiles[i]
@@ -196,7 +218,7 @@ export const copyFiles = async (
                 state: diff.state,
             })
         } else if (lstat.isFile()) {
-            terminal(`${logPrefix}: Copying: ${filePath}...`)
+            const logExtend = logWrite(scope, `Copying: ${filePath}...`)
 
             fs.copySync(path.join(fromDir, filePath), path.join(toDir, filePath), {
                 overwrite: true,
@@ -206,13 +228,13 @@ export const copyFiles = async (
 
             fileChanges.push(path.join(toDir, filePath))
 
-            terminal('Done!\n')
+            logExtend('Done!')
         }
     }
 
     const distinctFiles = compareResponse.diffSet.filter(dif => dif.state === 'distinct')
 
-    terminal(`${logPrefix}: Found ${distinctFiles.length} distinct file(s)!\n`)
+    logWrite(scope, `Found ${distinctFiles.length} distinct file(s)!`)
 
     for (let i = 0; i < distinctFiles.length; i++) {
         const diff = distinctFiles[i]
@@ -229,7 +251,7 @@ export const copyFiles = async (
                 state: diff.state,
             })
         } else if (lstat.isFile()) {
-            terminal(`${logPrefix}: Overriding: ${filePath}...`)
+            const logExtend = logWrite(scope, `Overriding: ${filePath}...`)
 
             fs.copySync(path.join(fromDir, filePath), path.join(toDir, filePath), {
                 overwrite: true,
@@ -239,16 +261,16 @@ export const copyFiles = async (
 
             fileChanges.push(path.join(toDir, filePath))
 
-            terminal('Done!\n')
+            logExtend('Done!')
         }
     }
 
-    terminal(`${logPrefix}: Found ${symlinkFiles.length} symlinks!\n`)
+    logWrite(scope, `Found ${symlinkFiles.length} symlinks!`)
 
     for (let i = 0; i < symlinkFiles.length; i++) {
         const { filePath, targetLink, reason, state } = symlinkFiles[i]
 
-        terminal(`${logPrefix}: Checking symlink target: ${filePath} (${state}/${reason ?? 'No reason'})...`)
+        const logExtend = logWrite(scope, `Checking symlink target: ${filePath} (${state}/${reason ?? 'No reason'})...`)
 
         if (state === 'distinct' && reason === 'different-symlink') {
             const symlinkPath = path.join(toDir, filePath)
@@ -258,7 +280,7 @@ export const copyFiles = async (
 
             fileChanges.push(symlinkPath)
 
-            terminal('Done!\n')
+            logExtend('Done!')
 
             continue
         }
@@ -270,19 +292,17 @@ export const copyFiles = async (
 
             fileChanges.push(symlinkPath)
 
-            terminal('Done!\n')
+            logExtend('Done!')
 
             continue
         }
 
-        terminal('Ignored!\n')
+        logExtend('Ignored!')
     }
 
     const status = await git.status()
 
-    terminal(
-        `${logPrefix}: Found ${fileChanges.length} diff files during compare - Git status: ${status.files.length} files \n`
-    )
+    logWrite(scope, `Found ${fileChanges.length} diff files during compare - Git status: ${status.files.length} files`)
 
     return fileChanges
 }
