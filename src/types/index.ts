@@ -5,6 +5,8 @@ export interface ActionInputs {
     forceInit: boolean
     sliceRepo: Repo
     upstreamRepo: Repo
+    prLabels: string[]
+    prDraft: boolean
 }
 
 export interface Repo {

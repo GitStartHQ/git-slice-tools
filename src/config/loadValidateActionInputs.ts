@@ -80,11 +80,30 @@ export const loadValidateActionInputs = (): ActionInputs => {
     const pushBranchNameTemplate = process.env.GIT_SLICE_PUSH_BRANCH_NAME_TEMPLATE || '<branch_name>'
     const pushCommitMsgRegex = new RegExp(process.env.GIT_SLICE_PUSH_COMMIT_MSG_REGEX || '.*', 'gi')
 
+    const prLabels: string[] = []
+    if (process.env.GIT_SLICE_PR_LABELS) {
+        try {
+            const parsedPRLabels = JSON.parse(process.env.GIT_SLICE_PR_LABELS)
+
+            if (!Array.isArray(parsedPRLabels)) {
+                throw new Error()
+            }
+
+            prLabels.push(...parsedPRLabels)
+        } catch (error) {
+            throw new Error(`Parsing 'GIT_SLICE_PR_LABELS' failed`)
+        }
+    }
+
+    const prDraft = !process.env.GIT_SLICE_FORCE_GIT_INIT || process.env.GIT_SLICE_FORCE_GIT_INIT !== 'false'
+
     return {
         sliceIgnores,
         pushBranchNameTemplate,
         pushCommitMsgRegex,
         forceInit,
+        prLabels,
+        prDraft,
         sliceRepo: {
             name: 'Slice',
             dir: path.resolve(process.cwd(), process.env.GIT_SLICE_SLICE_REPO_DIR),
