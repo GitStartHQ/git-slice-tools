@@ -18,3 +18,10 @@ export interface Repo {
     gitHttpUri: string
     userToken: string
 }
+
+export interface ErrorLike {
+    message: string
+    name?: string
+}
+
+export type LogScope = 'Upstream' | 'Slice'

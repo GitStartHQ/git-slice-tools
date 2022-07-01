@@ -139,11 +139,13 @@ export const push = async (
     await pullRemoteBranchIntoCurrentBranch(
         'Upstream',
         upstreamGit,
-        // TODO: should we merge the revision which current slice's default branch is synced as
-        // instead of upstream's default branch which can be missed matching..
-        // actionInputs.upstreamRepo.defaultBranch,
+        // we merge the revision which current slice's default branch is synced at
+        // instead of upstream's default branch which can be missed matching while running in parallel
         currentSyncUpstreamCommitId,
-        upstreamBranch
+        upstreamBranch,
+        // We ignore merging error on upstream to allow pushing updates when there are conflicts on upstream repo.
+        // In this case, commit below will contain both updates + merge base commit
+        true
     )
 
     terminal('Done!\n')
