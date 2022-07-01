@@ -7,6 +7,8 @@ const argv = yargs(process.argv.slice(2))
     .options({
         action: { type: 'string', choices: ['pull', 'push', 'checkout', 'raise-pr'], alias: 'a' },
         branch: { type: 'string', alias: 'b' },
+        title: { type: 'string', alias: 't' },
+        description: { type: 'string', alias: 'd' },
         message: { type: 'string', alias: 'm' },
         forcePush: { type: 'boolean', alias: 'force-push', default: false },
     })
