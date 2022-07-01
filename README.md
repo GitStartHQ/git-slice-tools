@@ -37,6 +37,7 @@ A new version of git-slice, super high performance with:
 | `checkout` | Fetch `origin` and checkout default branch of both upstream and slice repos |
 | `pull`     | Pull last changes from upstream repo into slice repo                        |
 | `push`     | Push a branch in slice repo to upstream repo                                |
+| `raise-pr` | Raise new PR for branch on upstream repo (GitHub only for now)              |
 
 ### Job `checkout`
 
