@@ -14,7 +14,7 @@ export const raisePr = async (
     terminal(`Performing raise-pr job with ${JSON.stringify({ sliceBranch, title, description })}...\n`)
 
     const upstreamBranch = actionInputs.pushBranchNameTemplate.replace('<branch_name>', sliceBranch)
-    const repo = actionInputs.sliceRepo
+    const repo = actionInputs.upstreamRepo
     const gitUrlObject = gitUrlParse(repo.gitHttpUri)
 
     if (gitUrlObject.source !== 'github.com') {

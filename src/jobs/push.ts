@@ -4,30 +4,32 @@ import {
     copyFiles,
     createCommitAndPushCurrentChanges,
     deleteSliceIgnoresFilesDirs,
+    logExtendLastLine,
+    logWriteLine,
     pullRemoteBranchIntoCurrentBranch,
 } from '../common'
-import { ActionInputs } from '../types'
+import { ActionInputs, LogScope } from '../types'
 
 const cleanAndDeleteLocalBranch = async (
     git: SimpleGit,
-    gitLogPrefix: string,
+    scope: LogScope,
     defaultBranch: string,
     branch: string
 ): Promise<void> => {
-    terminal(`${gitLogPrefix}: Clean...`)
+    logWriteLine(scope, 'Clean...')
 
     await git.reset(ResetMode.HARD)
     await git.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE + CleanOptions.IGNORED_INCLUDED)
 
-    terminal('Done!\n')
+    logExtendLastLine('Done!')
 
-    terminal(`${gitLogPrefix}: Fetch...`)
+    logWriteLine(scope, 'Fetch...')
 
     await git.fetch('origin')
 
-    terminal('Done!\n')
+    logExtendLastLine('Done!')
 
-    terminal(`${gitLogPrefix}: Delete local branch '${branch}'...`)
+    logWriteLine(scope, `Delete local branch '${branch}'...`)
 
     try {
         await git.checkout(defaultBranch)
@@ -38,7 +40,7 @@ const cleanAndDeleteLocalBranch = async (
         // noop
     }
 
-    terminal('Done!\n')
+    logExtendLastLine('Done!')
 }
 
 export const push = async (
@@ -62,30 +64,30 @@ export const push = async (
 
     // Find the oid from last gitslice:*** commit
 
-    terminal(`Finding the last git-slice:*** commit...`)
+    logWriteLine('Slice', `Finding the last git-slice:*** commit...`)
 
     const logs = await sliceGit.log({ maxCount: 20 })
     const lastGitSlicePullLog = logs.all.find(x => /^git-slice:.*$/.test(x.message.trim()))
 
     if (!lastGitSlicePullLog) {
-        terminal('Not found!\n')
+        logExtendLastLine('Not found!')
 
         throw new Error('Not found git-slice:*** commit in last 20 commits')
     }
 
     const currentSyncUpstreamCommitId = lastGitSlicePullLog.message.trim().split(':')[1]
 
-    terminal(`${currentSyncUpstreamCommitId}\n`)
-    terminal(`Slice: Checkout branch '${sliceBranch}'...`)
+    logExtendLastLine(`${currentSyncUpstreamCommitId}\n`)
+    logWriteLine('Slice', `Checkout branch '${sliceBranch}'...`)
 
     try {
         await sliceGit.checkout(sliceBranch)
         await sliceGit.pull('origin', sliceBranch)
 
-        terminal('Done!\n')
+        logExtendLastLine('Done!')
     } catch (error) {
         // noop
-        terminal('Not found!\n')
+        logExtendLastLine('Not found!')
 
         throw error
     }
@@ -97,23 +99,23 @@ export const push = async (
     let upstreamBranchExists = false
 
     try {
-        terminal(`Upstream: Check remote branch '${upstreamBranch}'...`)
+        logWriteLine('Upstream', `Check remote branch '${upstreamBranch}'...`)
 
         await upstreamGit.show(`remotes/origin/${upstreamBranch}`)
 
         upstreamBranchExists = true
 
-        terminal('Existed!\n')
+        logExtendLastLine('Existed!\n')
     } catch (error) {
-        terminal('Not found!\n')
+        logExtendLastLine('Not found!\n')
     }
 
     if (!upstreamBranchExists || forcePush) {
-        terminal(`Upstream: Checkout new branch '${upstreamBranch}'...`)
+        logWriteLine('Upstream', `Checkout new branch '${upstreamBranch}'...`)
 
         await upstreamGit.checkoutLocalBranch(upstreamBranch)
 
-        terminal('Done!\n')
+        logExtendLastLine('Done!\n')
 
         const diffFiles = await copyFiles(
             upstreamGit,
@@ -132,7 +134,7 @@ export const push = async (
         return
     }
 
-    terminal(`Upstream: Checkout branch '${upstreamBranch}'...`)
+    logWriteLine('Upstream', `Upstream: Checkout branch '${upstreamBranch}'...`)
 
     await upstreamGit.checkout(upstreamBranch)
     await upstreamGit.pull('origin', upstreamBranch)
@@ -148,7 +150,7 @@ export const push = async (
         true
     )
 
-    terminal('Done!\n')
+    logExtendLastLine('Done!\n')
 
     const diffFiles = await copyFiles(
         upstreamGit,

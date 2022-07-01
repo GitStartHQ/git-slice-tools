@@ -80,7 +80,7 @@ Command arguments
 | `--description` `-d` | PR description                       |
 
 ```bash
-yarn push --branch dev-test --message "test: commit message" --force-push false
+yarn raise-pr --branch dev-test --title "The pull request title" --description "The pull request description"
 ```
 
 ## Future jobs
