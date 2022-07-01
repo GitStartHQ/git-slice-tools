@@ -4,34 +4,61 @@ import gitUrlParse from 'git-url-parse'
 import { ActionInputs } from '../types'
 import { isErrorLike, logWriteLine, logExtendLastLine } from '../common'
 
-export const raisePr = async (
-    actionInputs: ActionInputs,
-    sliceBranch: string,
-    title: string,
-    description: string
-): Promise<void> => {
+export const raisePr = async (actionInputs: ActionInputs, sliceBranch: string): Promise<void> => {
     terminal('-'.repeat(30) + '\n')
-    terminal(`Performing raise-pr job with ${JSON.stringify({ sliceBranch, title, description })}...\n`)
+    terminal(`Performing raise-pr job with ${JSON.stringify({ sliceBranch })}...\n`)
 
-    const upstreamBranch = actionInputs.pushBranchNameTemplate.replace('<branch_name>', sliceBranch)
-    const repo = actionInputs.upstreamRepo
-    const gitUrlObject = gitUrlParse(repo.gitHttpUri)
+    const { upstreamRepo, sliceRepo } = actionInputs
+    const upstreamGitUrlObject = gitUrlParse(upstreamRepo.gitHttpUri)
+    const sliceGitUrlObject = gitUrlParse(sliceRepo.gitHttpUri)
 
-    if (gitUrlObject.source !== 'github.com') {
-        throw new Error(`Unsuported codehost '${gitUrlObject.source}'`)
+    if (upstreamGitUrlObject.source !== 'github.com') {
+        throw new Error(`Unsuported codehost '${upstreamGitUrlObject.source}'`)
     }
 
-    const octokit = new Octokit({
-        auth: repo.userToken,
+    logWriteLine('Slice', `Finding PR (${sliceRepo.defaultBranch} <- ${sliceBranch}) ...`)
+
+    const sliceOctokit = new Octokit({
+        auth: sliceRepo.userToken,
     })
 
-    logWriteLine('Upstream', `Checking existing PR (${repo.defaultBranch} <- ${upstreamBranch})...`)
+    let listResponse = await sliceOctokit.rest.pulls.list({
+        owner: sliceGitUrlObject.owner,
+        repo: sliceGitUrlObject.name,
+        base: upstreamRepo.defaultBranch,
+        head: `${sliceGitUrlObject.owner}:${sliceBranch}`,
+        state: 'open',
+    })
 
-    const listResponse = await octokit.rest.pulls.list({
-        owner: gitUrlObject.owner,
-        repo: gitUrlObject.name,
-        base: repo.defaultBranch,
-        head: `${gitUrlObject.owner}:${upstreamBranch}`,
+    if (listResponse.data.length === 0) {
+        logExtendLastLine(`Not found!`)
+
+        throw new Error("Couldn't find PR (${sliceRepo.defaultBranch} <- ${sliceBranch}) for getting title/description")
+
+        return
+    }
+
+    const { title, body, number: slicePrNumber } = listResponse.data[0]
+
+    logExtendLastLine(`PR #${slicePrNumber}`)
+
+    if (!body) {
+        throw new Error('PR #${slicePrNumber} has an empty description')
+    }
+
+    const upstreamOctokit = new Octokit({
+        auth: upstreamRepo.userToken,
+    })
+
+    const upstreamBranch = actionInputs.pushBranchNameTemplate.replace('<branch_name>', sliceBranch)
+
+    logWriteLine('Upstream', `Checking existing PR (${upstreamRepo.defaultBranch} <- ${upstreamBranch})...`)
+
+    listResponse = await upstreamOctokit.rest.pulls.list({
+        owner: upstreamGitUrlObject.owner,
+        repo: upstreamGitUrlObject.name,
+        base: upstreamRepo.defaultBranch,
+        head: `${upstreamGitUrlObject.owner}:${upstreamBranch}`,
         state: 'open',
     })
 
@@ -44,15 +71,15 @@ export const raisePr = async (
 
     logExtendLastLine(`Not found!`)
 
-    logWriteLine('Upstream', `Raising new PR (${repo.defaultBranch} <- ${upstreamBranch})...`)
+    logWriteLine('Upstream', `Raising new PR (${upstreamRepo.defaultBranch} <- ${upstreamBranch})...`)
 
-    const createResponse = await octokit.rest.pulls.create({
-        owner: gitUrlObject.owner,
-        repo: gitUrlObject.name,
+    const createResponse = await upstreamOctokit.rest.pulls.create({
+        owner: upstreamGitUrlObject.owner,
+        repo: upstreamGitUrlObject.name,
         title,
-        body: description,
-        base: repo.defaultBranch,
-        head: `${gitUrlObject.owner}:${upstreamBranch}`,
+        body,
+        base: upstreamRepo.defaultBranch,
+        head: `${upstreamGitUrlObject.owner}:${upstreamBranch}`,
         draft: actionInputs.prDraft,
         maintainer_can_modifyboolean: true,
     })
@@ -60,20 +87,20 @@ export const raisePr = async (
 
     logExtendLastLine(`Done PR #${prNumber}`)
 
-    await octokit.rest.issues.addLabels({
+    await upstreamOctokit.rest.issues.addLabels({
         issue_number: prNumber,
-        owner: gitUrlObject.owner,
-        repo: gitUrlObject.name,
+        owner: upstreamGitUrlObject.owner,
+        repo: upstreamGitUrlObject.name,
         labels: actionInputs.prLabels,
     })
 
     logWriteLine('Upstream', `Adding assignees into PR #${prNumber}...`)
     try {
-        await octokit.rest.issues.addAssignees({
+        await upstreamOctokit.rest.issues.addAssignees({
             issue_number: prNumber,
-            owner: gitUrlObject.owner,
-            repo: gitUrlObject.name,
-            assignees: [repo.username],
+            owner: upstreamGitUrlObject.owner,
+            repo: upstreamGitUrlObject.name,
+            assignees: [upstreamRepo.username],
         })
 
         logExtendLastLine(`Done!`)
@@ -88,10 +115,10 @@ export const raisePr = async (
     if (actionInputs.prLabels.length) {
         logWriteLine('Upstream', `Adding labels into PR #${prNumber}...`)
         try {
-            await octokit.rest.issues.addLabels({
+            await upstreamOctokit.rest.issues.addLabels({
                 issue_number: prNumber,
-                owner: gitUrlObject.owner,
-                repo: gitUrlObject.name,
+                owner: upstreamGitUrlObject.owner,
+                repo: upstreamGitUrlObject.name,
                 labels: actionInputs.prLabels,
             })
 
