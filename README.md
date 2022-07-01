@@ -27,6 +27,8 @@ A new version of git-slice, super high performance with:
 | `GIT_SLICE_PUSH_BRANCH_NAME_TEMPLATE`    | Pattern for building branch name in upstream repo when pushing a branch in slice repo, git-slice-tools would replace `<branch_name>` with the name pushing branch. ex: `dev/<branch_name>` |
 | `GIT_SLICE_PUSH_COMMIT_MSG_REGEX`        | Regular expression which is used to validate commit messages                                                                                                                               |
 | `GIT_SLICE_FORCE_GIT_INIT`               | (`true` or `false`). Default is `true`. git-slice-tools would reset git configs in every run times                                                                                         |
+| `GIT_SLICE_PR_LABELS`                    | Array of labels which git-slice-tools will add into new PR. Ex: ex: `["gitstart","team/frontend-platform"`                                                                                 |
+| `GIT_SLICE_PR_DRAFT`                     | (`true` or `false`). Default is `true`. git-slice-tools would raise new PR as draft PR                                                                                                     |
 
 ## Jobs
 
@@ -58,9 +60,23 @@ Command arguments
 
 | Arg              | Description                               |
 | ---------------- | ----------------------------------------- |
-| `--branch` `-a`  | Name of pushing branch in slice repo      |
+| `--branch` `-b`  | Name of pushing branch in slice repo      |
 | `--message` `-m` | Commit message                            |
 | `--force-push`   | Determine wether to use force push or not |
+
+```bash
+yarn push --branch dev-test --message "test: commit message" --force-push false
+```
+
+### Job `raise-pr`
+
+Command arguments
+
+| Arg                  | Description                          |
+| -------------------- | ------------------------------------ |
+| `--branch` `-b`      | Name of pushing branch in slice repo |
+| `--title` `-t`       | PR title                             |
+| `--description` `-d` | PR description                       |
 
 ```bash
 yarn push --branch dev-test --message "test: commit message" --force-push false
