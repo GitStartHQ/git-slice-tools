@@ -1,6 +1,7 @@
-import { CleanOptions, ResetMode, SimpleGit } from 'simple-git'
+import { SimpleGit } from 'simple-git'
 import { terminal } from 'terminal-kit'
 import {
+    cleanAndDeleteLocalBranch,
     copyFiles,
     createCommitAndPushCurrentChanges,
     deleteSliceIgnoresFilesDirs,
@@ -8,40 +9,7 @@ import {
     logWriteLine,
     pullRemoteBranchIntoCurrentBranch,
 } from '../common'
-import { ActionInputs, LogScope } from '../types'
-
-const cleanAndDeleteLocalBranch = async (
-    git: SimpleGit,
-    scope: LogScope,
-    defaultBranch: string,
-    branch: string
-): Promise<void> => {
-    logWriteLine(scope, 'Clean...')
-
-    await git.reset(ResetMode.HARD)
-    await git.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE + CleanOptions.IGNORED_INCLUDED)
-
-    logExtendLastLine('Done!')
-
-    logWriteLine(scope, 'Fetch...')
-
-    await git.fetch('origin')
-
-    logExtendLastLine('Done!')
-
-    logWriteLine(scope, `Delete local branch '${branch}'...`)
-
-    try {
-        await git.checkout(defaultBranch)
-        await git.pull('origin', defaultBranch)
-        await git.branch(['-D', branch])
-        await git.branch(['-Dr', branch])
-    } catch (error) {
-        // noop
-    }
-
-    logExtendLastLine('Done!')
-}
+import { ActionInputs } from '../types'
 
 export const push = async (
     sliceGit: SimpleGit,

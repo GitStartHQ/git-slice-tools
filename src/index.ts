@@ -1,15 +1,16 @@
 import { terminal } from 'terminal-kit'
 import yargs from 'yargs/yargs'
 import { loadValidateActionInputs } from './config'
-import { init, pull, push, checkout, raisePr } from './jobs'
+import { init, pull, push, checkout, raisePr, pullBranch } from './jobs'
 
 const argv = yargs(process.argv.slice(2))
     .options({
-        action: { type: 'string', choices: ['pull', 'push', 'checkout', 'raise-pr'], alias: 'a' },
+        action: { type: 'string', choices: ['pull', 'push', 'checkout', 'raise-pr', 'pull-branch'], alias: 'a' },
         branch: { type: 'string', alias: 'b' },
         title: { type: 'string', alias: 't' },
         description: { type: 'string', alias: 'd' },
         message: { type: 'string', alias: 'm' },
+        target: { type: 'string', alias: '-g' },
         forcePush: { type: 'boolean', alias: 'force-push', default: false },
     })
     .parseSync()
@@ -43,6 +44,13 @@ init(actionInputs).then(({ sliceGit, upstreamGit }) => {
             }
 
             return raisePr(actionInputs, argv.branch)
+        }
+        case 'pull-branch': {
+            if (!argv.branch || typeof argv.branch !== 'string') {
+                throw new Error(`pull-branch job: 'branch' in string is required`)
+            }
+
+            return pullBranch(sliceGit, upstreamGit, actionInputs, argv.branch, argv.target)
         }
         default: {
             return

@@ -2,7 +2,7 @@ import { compareSync, DifferenceState, Reason } from 'dir-compare'
 import fs from 'fs-extra'
 import { Glob } from 'glob'
 import path from 'path'
-import { GitError, SimpleGit } from 'simple-git'
+import { CleanOptions, GitError, ResetMode, SimpleGit } from 'simple-git'
 import { terminal } from 'terminal-kit'
 import { ErrorLike, LogScope } from '../types'
 import { logExtendLastLine, logWriteLine } from './logger'
@@ -299,4 +299,37 @@ export const copyFiles = async (
     )
 
     return fileChanges
+}
+
+export const cleanAndDeleteLocalBranch = async (
+    git: SimpleGit,
+    scope: LogScope,
+    defaultBranch: string,
+    branch: string
+): Promise<void> => {
+    logWriteLine(scope, 'Clean...')
+
+    await git.reset(ResetMode.HARD)
+    await git.clean(CleanOptions.FORCE + CleanOptions.RECURSIVE + CleanOptions.IGNORED_INCLUDED)
+
+    logExtendLastLine('Done!')
+
+    logWriteLine(scope, 'Fetch...')
+
+    await git.fetch('origin')
+
+    logExtendLastLine('Done!')
+
+    logWriteLine(scope, `Delete local branch '${branch}'...`)
+
+    try {
+        await git.checkout(defaultBranch)
+        await git.pull('origin', defaultBranch)
+        await git.branch(['-D', branch])
+        await git.branch(['-Dr', branch])
+    } catch (error) {
+        // noop
+    }
+
+    logExtendLastLine('Done!')
 }

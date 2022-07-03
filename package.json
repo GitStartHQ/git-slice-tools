@@ -14,6 +14,7 @@
     "push": "yarn build && node build/index.js --action push",
     "checkout": "yarn build && node build/index.js --action checkout",
     "raise-pr": "yarn build && node build/index.js --action raise-pr",
+    "pull-branch": "yarn build && node build/index.js --action pull-branch",
     "dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "lint:fix": "yarn lint --fix"

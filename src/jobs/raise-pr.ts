@@ -25,7 +25,7 @@ export const raisePr = async (actionInputs: ActionInputs, sliceBranch: string): 
     let listResponse = await sliceOctokit.rest.pulls.list({
         owner: sliceGitUrlObject.owner,
         repo: sliceGitUrlObject.name,
-        base: upstreamRepo.defaultBranch,
+        base: sliceRepo.defaultBranch,
         head: `${sliceGitUrlObject.owner}:${sliceBranch}`,
         state: 'open',
     })
@@ -33,7 +33,7 @@ export const raisePr = async (actionInputs: ActionInputs, sliceBranch: string): 
     if (listResponse.data.length === 0) {
         logExtendLastLine(`Not found!`)
 
-        throw new Error("Couldn't find PR (${sliceRepo.defaultBranch} <- ${sliceBranch}) for getting title/description")
+        throw new Error(`Couldn't find PR (${sliceRepo.defaultBranch} <- ${sliceBranch}) for getting title/description`)
 
         return
     }
