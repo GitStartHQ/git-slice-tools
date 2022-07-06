@@ -39,6 +39,7 @@ A new version of git-slice, super high performance with:
 | `push`        | Push a branch in slice repo to upstream repo                                                                                                                                                                                                                                                                                            |
 | `raise-pr`    | Raise new PR for branch on upstream repo (GitHub only for now)                                                                                                                                                                                                                                                                          |
 | `pull-branch` | Pull last changes of a branch from upstream repo into slice repo. The destination branch in slice repo has the pulling branch but with `upstream-*` prefix. Please note that this job uses `force-push` and the upstream should be updated to date with the default branch of upstream repo otherwise there would be some extra changes |
+| `pull-review` | Pull a PR review from a PR on upstream repo into a PR on slice repo                                                                                                                                                                                                                                                                     |
 
 ### Job `checkout`
 
@@ -97,10 +98,21 @@ Command arguments
 yarn pull-branch --branch dev-test
 ```
 
+### Job `pull-review`
+
+Command arguments
+
+| Arg                | Description                                                                                                                                                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--branch` `-b`    | Name of branch in slice repo                                                                                                                                                                                                                                                          |
+| `--pr-review-link` | The link of pull request review you want to pull, ex: https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547 . Actually git-slice-tool only care about `/pull/<pull_id>#pullrequestreview-<review_id>` part for getting pull request number and review id |
+
+```bash
+yarn pull-review --branch dev-test --pr-review-link https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
+```
+
 ## Future jobs
 
-| Job                                                                                                   | Description                                                               |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| GitStart dashboard integration                                                                        | Support GitStart authentication and fetching repos details from dashboard |
-| Pull a specific branch from upstream repo to slice repo                                               | ...                                                                       |
-| Push a branch in slice repo to upstream repo with any base branches (shouldn't be the default branch) | ...                                                                       |
+| Job                            | Description                                                               |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| GitStart dashboard integration | Support GitStart authentication and fetching repos details from dashboard |
