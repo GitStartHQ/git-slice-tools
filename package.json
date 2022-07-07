@@ -7,6 +7,18 @@
     "node": "^v16.7.0",
     "yarn": "^1.22.4"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GitStartHQ/git-slice-tools"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "git-slice-tools": "./bin/git-slice-tools.js"
+  },
+  "files": [
+    "./dist"
+  ],
+  "author": "phunguyenmurcul",
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "pull": "ts-node src/index.ts --action pull",
