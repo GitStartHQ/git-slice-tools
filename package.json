@@ -18,7 +18,9 @@
     "pull-review": "yarn build && node build/index.js --action pull-review",
     "dev": "nodemon",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "yarn lint --fix"
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier --check \"**/*.{js,ts,css,json,md,yml,yaml}\"",
+    "format:fix": "prettier --write \"**/*.{js,ts,css,json,md,yml,yaml}\""
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
