@@ -37,9 +37,9 @@ A new version of git-slice, super high performance with:
 | `checkout`    | Fetch `origin` and checkout default branch of both upstream and slice repos                                                                                                                                                                                                                                                             |
 | `pull`        | Pull last changes from upstream repo into slice repo                                                                                                                                                                                                                                                                                    |
 | `push`        | Push a branch in slice repo to upstream repo                                                                                                                                                                                                                                                                                            |
-| `raise-pr`    | Raise new PR for branch on upstream repo (GitHub only for now)                                                                                                                                                                                                                                                                          |
+| `raise-pr`    | Raise new PR for branch on upstream repo (GitHub only)                                                                                                                                                                                                                                                                                  |
 | `pull-branch` | Pull last changes of a branch from upstream repo into slice repo. The destination branch in slice repo has the pulling branch but with `upstream-*` prefix. Please note that this job uses `force-push` and the upstream should be updated to date with the default branch of upstream repo otherwise there would be some extra changes |
-| `pull-review` | Pull a PR review from a PR on upstream repo into a PR on slice repo                                                                                                                                                                                                                                                                     |
+| `pull-review` | Pull a PR review from a PR on upstream repo into a PR on slice repo (GitHub only). Please note that if upstream review has comments on code, this job will throw errors if upstream and slice branches don't have the same changes                                                                                                      |
 
 ### Job `checkout`
 
@@ -102,13 +102,13 @@ yarn pull-branch --branch dev-test
 
 Command arguments
 
-| Arg                | Description                                                                                                                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--branch` `-b`    | Name of branch in slice repo                                                                                                                                                                                                                                                          |
-| `--pr-review-link` | The link of pull request review you want to pull, ex: https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547 . Actually git-slice-tool only care about `/pull/<pull_id>#pullrequestreview-<review_id>` part for getting pull request number and review id |
+| Arg                | Description                                                                                                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--pr-number`      | PR number on slice repo which you want to pull a review into                                                                                                                                                                                                                                |
+| `--pr-review-link` | The link of pull request review you want to pull from, ex: https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547 . Actually git-slice-tools only care about `/pull/<pull_id>#pullrequestreview-<review_id>` part for getting pull request number and review id |
 
 ```bash
-yarn pull-review --branch dev-test --pr-review-link https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
+yarn pull-review --pr-number 123 --pr-review-link https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
 ```
 
 ## Future jobs

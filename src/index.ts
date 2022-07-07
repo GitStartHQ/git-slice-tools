@@ -1,17 +1,23 @@
 import { terminal } from 'terminal-kit'
 import yargs from 'yargs/yargs'
 import { loadValidateActionInputs } from './config'
-import { init, pull, push, checkout, raisePr, pullBranch } from './jobs'
+import { init, pull, push, checkout, raisePr, pullBranch, pullReview } from './jobs'
 
 const argv = yargs(process.argv.slice(2))
     .options({
-        action: { type: 'string', choices: ['pull', 'push', 'checkout', 'raise-pr', 'pull-branch'], alias: 'a' },
+        action: {
+            type: 'string',
+            choices: ['pull', 'push', 'checkout', 'raise-pr', 'pull-branch', 'pull-review'],
+            alias: 'a',
+        },
         branch: { type: 'string', alias: 'b' },
         title: { type: 'string', alias: 't' },
         description: { type: 'string', alias: 'd' },
         message: { type: 'string', alias: 'm' },
         target: { type: 'string', alias: '-g' },
         forcePush: { type: 'boolean', alias: 'force-push', default: false },
+        prNumber: { type: 'number', alias: 'pr-number' },
+        prReivewLink: { type: 'string', alias: 'pr-review-link' },
     })
     .parseSync()
 
@@ -51,6 +57,17 @@ init(actionInputs).then(({ sliceGit, upstreamGit }) => {
             }
 
             return pullBranch(sliceGit, upstreamGit, actionInputs, argv.branch, argv.target)
+        }
+        case 'pull-review': {
+            if (!argv.prNumber || typeof argv.prNumber !== 'number') {
+                throw new Error(`pull-review job: 'pr-number' in string is required`)
+            }
+
+            if (!argv.prReivewLink || typeof argv.prReivewLink !== 'string') {
+                throw new Error(`pull-review job: 'pr-review-link' in string is required`)
+            }
+
+            return pullReview(sliceGit, upstreamGit, actionInputs, argv.prNumber, argv.prReivewLink)
         }
         default: {
             return

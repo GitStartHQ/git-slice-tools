@@ -15,6 +15,7 @@
     "checkout": "yarn build && node build/index.js --action checkout",
     "raise-pr": "yarn build && node build/index.js --action raise-pr",
     "pull-branch": "yarn build && node build/index.js --action pull-branch",
+    "pull-review": "yarn build && node build/index.js --action pull-review",
     "dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "lint:fix": "yarn lint --fix"
