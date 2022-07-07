@@ -116,3 +116,11 @@ yarn pull-review --pr-number 123 --pr-review-link https://github.com/sourcegraph
 | Job                            | Description                                                               |
 | ------------------------------ | ------------------------------------------------------------------------- |
 | GitStart dashboard integration | Support GitStart authentication and fetching repos details from dashboard |
+
+## Development
+
+We recommend to not use `nodemon` while developing since it couldn't effect production repositories. But in case you really want to use it you can use this form:
+
+```bash
+yarn dev --exec "yarn pull"
+```

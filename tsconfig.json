@@ -6,12 +6,13 @@
     "rootDir": "src",
     "resolveJsonModule": true,
     "allowJs": false,
-    "outDir": "build",
+    "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
+    "sourceMap": true
   },
   "exclude": ["node_nodules", "repos"],
 }
