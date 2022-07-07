@@ -1,8 +1,8 @@
+import gitUrlParse from 'git-url-parse'
 import { Octokit } from 'octokit'
 import { terminal } from 'terminal-kit'
-import gitUrlParse from 'git-url-parse'
+import { isErrorLike, logExtendLastLine, logWriteLine } from '../common'
 import { ActionInputs } from '../types'
-import { isErrorLike, logWriteLine, logExtendLastLine } from '../common'
 
 export const raisePr = async (actionInputs: ActionInputs, sliceBranch: string): Promise<void> => {
     terminal('-'.repeat(30) + '\n')

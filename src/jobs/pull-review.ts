@@ -1,14 +1,8 @@
 import gitUrlParse from 'git-url-parse'
 import { Octokit } from 'octokit'
-import { CleanOptions, ResetMode, SimpleGit } from 'simple-git'
+import { SimpleGit } from 'simple-git'
 import { terminal } from 'terminal-kit'
-import {
-    cleanAndDeleteLocalBranch,
-    copyFiles,
-    createCommitAndPushCurrentChanges,
-    logExtendLastLine,
-    logWriteLine,
-} from '../common'
+import { logExtendLastLine, logWriteLine } from '../common'
 import { ActionInputs } from '../types'
 
 export const pullReview = async (

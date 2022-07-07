@@ -1,7 +1,7 @@
 import { terminal } from 'terminal-kit'
 import yargs from 'yargs/yargs'
 import { loadValidateActionInputs } from './config'
-import { init, pull, push, checkout, raisePr, pullBranch, pullReview } from './jobs'
+import { checkout, init, pull, pullBranch, pullReview, push, raisePr } from './jobs'
 
 const argv = yargs(process.argv.slice(2))
     .options({
