@@ -1,0 +1,33 @@
+name: git-slice-tools-pull
+
+on: [workflow_call]
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - name: Cache upstream repo
+        id: cache-repos
+        uses: actions/cache@v2
+        with:
+          path: |
+            upstream-repo
+            slice-repo
+          key: cache-repo-${{ env.GIT_SLICE_CHECKOUT_CACHED_KEY }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install git-slice-tools
+        run: yarn global add https://github.com/GitStartHQ/git-slice-tools#workflow_call
+
+      - name: git-slice-tools PULL
+        run: |
+          git-slice-tools pull
