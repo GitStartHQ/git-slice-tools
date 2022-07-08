@@ -3,9 +3,13 @@ import fs from 'fs'
 import path from 'path'
 import { ActionInputs } from '../types'
 
-dotenv.config()
+export const loadValidateActionInputs = (envFilePath?: string): ActionInputs => {
+    if (envFilePath && !fs.existsSync(path.resolve(process.cwd(), envFilePath))) {
+        throw new Error(`${envFilePath} doesn't exist`)
+    }
 
-export const loadValidateActionInputs = (): ActionInputs => {
+    dotenv.config(envFilePath ? { path: envFilePath } : undefined)
+
     const forceInit = !process.env.GIT_SLICE_FORCE_GIT_INIT || process.env.GIT_SLICE_FORCE_GIT_INIT !== 'false'
 
     if (

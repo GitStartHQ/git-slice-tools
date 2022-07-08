@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -43,12 +54,12 @@ var terminal_kit_1 = require("terminal-kit");
 var yargs_1 = __importDefault(require("yargs/yargs"));
 var config_1 = require("./config");
 var jobs_1 = require("./jobs");
-var loadActionInputsAndInit = function (cb) { return __awaiter(void 0, void 0, void 0, function () {
+var loadActionInputsAndInit = function (envFilePath, cb) { return __awaiter(void 0, void 0, void 0, function () {
     var actionInputs, _a, sliceGit, upstreamGit;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                actionInputs = (0, config_1.loadValidateActionInputs)();
+                actionInputs = (0, config_1.loadValidateActionInputs)(envFilePath);
                 return [4 /*yield*/, (0, jobs_1.init)(actionInputs)];
             case 1:
                 _a = _b.sent(), sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit;
@@ -60,34 +71,43 @@ var loadActionInputsAndInit = function (cb) { return __awaiter(void 0, void 0, v
         }
     });
 }); };
+var GLOBAL_OPTIONS_CONFIG = {
+    env: {
+        type: 'string',
+        desc: 'File path of a text file which contains all required git-slice env variables',
+    },
+};
 (0, yargs_1.default)(process.argv.slice(2))
-    .command('checkout', 'Fetch `origin` and checkout default branch of both upstream and slice repos', {}, function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        return [2 /*return*/, loadActionInputsAndInit(function (_a) {
-                var sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit, actionInputs = _a.actionInputs;
-                return (0, jobs_1.checkout)(sliceGit, upstreamGit, actionInputs);
-            })];
+    .option(GLOBAL_OPTIONS_CONFIG)
+    .command('checkout', 'Fetch `origin` and checkout default branch of both upstream and slice repos', GLOBAL_OPTIONS_CONFIG, function (_a) {
+    var env = _a.env;
+    return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_b) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
+                    var sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit, actionInputs = _a.actionInputs;
+                    return (0, jobs_1.checkout)(sliceGit, upstreamGit, actionInputs);
+                })];
+        });
     });
-}); })
-    .command('pull', 'Pull last changes from upstream repo into slice repo', {}, function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        return [2 /*return*/, loadActionInputsAndInit(function (_a) {
-                var sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit, actionInputs = _a.actionInputs;
-                return (0, jobs_1.pull)(sliceGit, upstreamGit, actionInputs);
-            })];
+})
+    .command('pull', 'Pull last changes from upstream repo into slice repo', GLOBAL_OPTIONS_CONFIG, function (_a) {
+    var env = _a.env;
+    return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_b) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
+                    var sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit, actionInputs = _a.actionInputs;
+                    return (0, jobs_1.pull)(sliceGit, upstreamGit, actionInputs);
+                })];
+        });
     });
-}); })
-    .command('push', 'Push a branch in slice repo to upstream repo', {
-    branch: { type: 'string', alias: 'b', desc: 'Name of pushing branch in slice repo' },
-    message: { type: 'string', alias: 'm', desc: 'Commit message' },
-    forcePush: {
+})
+    .command('push', 'Push a branch in slice repo to upstream repo', __assign(__assign({}, GLOBAL_OPTIONS_CONFIG), { branch: { type: 'string', alias: 'b', desc: 'Name of pushing branch in slice repo' }, message: { type: 'string', alias: 'm', desc: 'Commit message' }, forcePush: {
         type: 'boolean',
         alias: 'force-push',
         default: false,
         desc: 'Determine wether to use force push or not',
-    },
-}, function (_a) {
-    var branch = _a.branch, message = _a.message, forcePush = _a.forcePush;
+    } }), function (_a) {
+    var env = _a.env, branch = _a.branch, message = _a.message, forcePush = _a.forcePush;
     return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_b) {
             if (!branch || typeof branch !== 'string') {
@@ -96,63 +116,55 @@ var loadActionInputsAndInit = function (cb) { return __awaiter(void 0, void 0, v
             if (!message || typeof message !== 'string') {
                 throw new Error("push job: 'message' in string is required");
             }
-            return [2 /*return*/, loadActionInputsAndInit(function (_a) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
                     var sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit, actionInputs = _a.actionInputs;
                     return (0, jobs_1.push)(sliceGit, upstreamGit, actionInputs, branch, message, forcePush);
                 })];
         });
     });
 })
-    .command('raise-pr', 'Raise new PR for branch on upstream repo (GitHub only) with details (title/body) from the PR for a branch on slice repo', {
-    branch: { type: 'string', alias: 'b', desc: 'Name of pushing branch in slice repo' },
-}, function (_a) {
-    var branch = _a.branch;
+    .command('raise-pr', 'Raise new PR for branch on upstream repo (GitHub only) with details (title/body) from the PR for a branch on slice repo', __assign(__assign({}, GLOBAL_OPTIONS_CONFIG), { branch: { type: 'string', alias: 'b', desc: 'Name of pushing branch in slice repo' } }), function (_a) {
+    var branch = _a.branch, env = _a.env;
     return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_b) {
             if (!branch || typeof branch !== 'string') {
                 throw new Error("raise-pr job: 'branch' in string is required");
             }
-            return [2 /*return*/, loadActionInputsAndInit(function (_a) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
                     var actionInputs = _a.actionInputs;
                     return (0, jobs_1.raisePr)(actionInputs, branch);
                 })];
         });
     });
 })
-    .command('pull-branch', 'Pull last changes of a branch from upstream repo into slice repo. The destination branch in slice repo has the pulling branch but with `upstream-*` prefix. Please note that this job uses `force-push` and the upstream should be updated to date with the default branch of upstream repo otherwise there would be some extra changes', {
-    branch: { type: 'string', alias: 'b', desc: 'Name of pulling branch in upstream repo' },
-    target: {
+    .command('pull-branch', 'Pull last changes of a branch from upstream repo into slice repo. The destination branch in slice repo has the pulling branch but with `upstream-*` prefix. Please note that this job uses `force-push` and the upstream should be updated to date with the default branch of upstream repo otherwise there would be some extra changes', __assign(__assign({}, GLOBAL_OPTIONS_CONFIG), { branch: { type: 'string', alias: 'b', desc: 'Name of pulling branch in upstream repo' }, target: {
         type: 'string',
         alias: 'g',
         desc: "Name of target branch in slice repo. If it's passed, git-slice will create a PR (target branch <- pulling branch)",
-    },
-}, function (_a) {
-    var branch = _a.branch, target = _a.target;
+    } }), function (_a) {
+    var env = _a.env, branch = _a.branch, target = _a.target;
     return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_b) {
             if (!branch || typeof branch !== 'string') {
                 throw new Error("pull-branch job: 'branch' in string is required");
             }
-            return [2 /*return*/, loadActionInputsAndInit(function (_a) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
                     var actionInputs = _a.actionInputs, sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit;
                     return (0, jobs_1.pullBranch)(sliceGit, upstreamGit, actionInputs, branch, target);
                 })];
         });
     });
 })
-    .command('pull-review', "Pull a PR review from a PR on upstream repo into a PR on slice repo (GitHub only). Please note that if upstream review has comments on code, this job will throw errors if upstream and slice branches don't have the same changes", {
-    prNumber: {
+    .command('pull-review', "Pull a PR review from a PR on upstream repo into a PR on slice repo (GitHub only). Please note that if upstream review has comments on code, this job will throw errors if upstream and slice branches don't have the same changes", __assign(__assign({}, GLOBAL_OPTIONS_CONFIG), { prNumber: {
         type: 'number',
         alias: 'pr-number',
         desc: 'PR number on slice repo which you want to pull a review into',
-    },
-    prReivewLink: {
+    }, prReivewLink: {
         type: 'string',
         alias: 'pr-review-link',
         desc: 'The link of pull request review you want to pull from, ex: https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547 . Actually git-slice-tools only care about `/pull/<pull_id>#pullrequestreview-<review_id>` part for getting pull request number and review id',
-    },
-}, function (_a) {
-    var prNumber = _a.prNumber, prReivewLink = _a.prReivewLink;
+    } }), function (_a) {
+    var env = _a.env, prNumber = _a.prNumber, prReivewLink = _a.prReivewLink;
     return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_b) {
             if (!prNumber || typeof prNumber !== 'number') {
@@ -161,7 +173,7 @@ var loadActionInputsAndInit = function (cb) { return __awaiter(void 0, void 0, v
             if (!prReivewLink || typeof prReivewLink !== 'string') {
                 throw new Error("pull-review job: 'pr-review-link' in string is required");
             }
-            return [2 /*return*/, loadActionInputsAndInit(function (_a) {
+            return [2 /*return*/, loadActionInputsAndInit(env, function (_a) {
                     var actionInputs = _a.actionInputs, sliceGit = _a.sliceGit, upstreamGit = _a.upstreamGit;
                     return (0, jobs_1.pullReview)(sliceGit, upstreamGit, actionInputs, prNumber, prReivewLink);
                 })];

@@ -30,6 +30,32 @@ A new version of git-slice, super high performance with:
 | `GIT_SLICE_PR_LABELS`                    | Array of labels which git-slice-tools will add into new PR. Ex: ex: `["gitstart","team/frontend-platform"`                                                                                 |
 | `GIT_SLICE_PR_DRAFT`                     | (`true` or `false`). Default is `true`. git-slice-tools would raise new PR as draft PR                                                                                                     |
 
+Sample `.env` file
+
+```
+GIT_SLICE_SLICE_IGNORES='["internal-docs.md"]'
+GIT_SLICE_PUSH_BRANCH_NAME_TEMPLATE='dev/<branch_name>'
+GIT_SLICE_PUSH_COMMIT_MSG_REGEX='.*'
+GIT_SLICE_FORCE_GIT_INIT=true
+
+GIT_SLICE_UPSTREAM_REPO_DIR=/Users/gitstart/Projects/repos/gitstart-sourcegraph
+GIT_SLICE_UPSTREAM_REPO_DEFAULT_BRANCH=main
+GIT_SLICE_UPSTREAM_REPO_USERNAME=foobar
+GIT_SLICE_UPSTREAM_REPO_EMAIL=foo.bar@git.com
+GIT_SLICE_UPSTREAM_REPO_PASSWORD=<PAT>
+GIT_SLICE_UPSTREAM_REPO_URL=https://github.com/GitStartHQ/gitstart-sourcegraph.git
+
+GIT_SLICE_SLICE_REPO_DIR=/Users/gitstart/Projects/repos/sourcegraph-sourcegraph
+GIT_SLICE_SLICE_REPO_DEFAULT_BRANCH=main
+GIT_SLICE_SLICE_REPO_USERNAME=jackjill
+GIT_SLICE_SLICE_REPO_EMAIL=jack.fill@git.com
+GIT_SLICE_SLICE_REPO_PASSWORD=<PAT>
+GIT_SLICE_SLICE_REPO_URL=https://github.com/sourcegraph/sourcegraph.git
+
+GIT_SLICE_PR_LABELS='["gitstart","team/frontend-platform"]'
+GIT_SLICE_PR_DRAFT=true
+```
+
 ## Development
 
 To use `git-slice-tools` in dev mode, clone `git-slice-tools` repository
@@ -48,7 +74,7 @@ yarn
 cp .env.example .env
 
 # Execute jobs
-yarn <job_name> [...job_options] [--help] [--version]
+yarn <job_name> [...job_options] [--env <env_file_path>] [--help] [--version]
 ```
 
 We don't recommend to use `nodemon` for development since it could effect production repositories. But in case you really want to use it you can use this form:
@@ -65,14 +91,16 @@ You can install and use `git-slice-tools` globally
 # Install package globally
 
 # With yarn
-yarn global add https://github.com/GitStartHQ/git-slice-tools#vX.X.X
+yarn global add https://github.com/GitStartHQ/git-slice-tools
 
 # With npm
-npm install -g https://github.com/GitStartHQ/git-slice-tools#vX.X.X
+npm install -g https://github.com/GitStartHQ/git-slice-tools
 
 # Execute jobs
-git-slice-tools <job_name> [...job_options] [--help] [--version]
+git-slice-tools <job_name> [...job_options] [--env <env_file_path>] [--help] [--version]
 ```
+
+You can save all required environment variables in a text file and use `--env` param with its file path in every job execution, git-slice-tools will load environment variables from it, with this way you can use git-slice-tools global CLI with multiple projects without spending efforts on updating environment variables.
 
 ## Jobs
 

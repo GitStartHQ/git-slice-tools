@@ -156,6 +156,8 @@ export const copyFiles = async (
         ].join(','),
     })
 
+    logExtendLastLine('Done!')
+
     if (!compareResponse.diffSet || compareResponse.diffSet.length === 0) {
         logWriteLine(scope, `Found 0 diff file(s)!`)
 

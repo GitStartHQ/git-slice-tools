@@ -7,8 +7,11 @@ exports.loadValidateActionInputs = void 0;
 var dotenv_1 = __importDefault(require("dotenv"));
 var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
-dotenv_1.default.config();
-var loadValidateActionInputs = function () {
+var loadValidateActionInputs = function (envFilePath) {
+    if (envFilePath && !fs_1.default.existsSync(path_1.default.resolve(process.cwd(), envFilePath))) {
+        throw new Error(envFilePath + " doesn't exist");
+    }
+    dotenv_1.default.config(envFilePath ? { path: envFilePath } : undefined);
     var forceInit = !process.env.GIT_SLICE_FORCE_GIT_INIT || process.env.GIT_SLICE_FORCE_GIT_INIT !== 'false';
     if (!process.env.GIT_SLICE_UPSTREAM_REPO_DIR ||
         !fs_1.default.existsSync(path_1.default.resolve(process.cwd(), process.env.GIT_SLICE_UPSTREAM_REPO_DIR))) {
