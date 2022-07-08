@@ -1,6 +1,6 @@
 {
   "name": "git-slice-tools",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "dist/index.js",
   "license": "MIT",
   "engines": {
@@ -21,12 +21,14 @@
   "author": "phunguyenmurcul",
   "scripts": {
     "build": "rimraf ./dist && tsc",
-    "pull": "ts-node src/index.ts --action pull",
-    "push": "ts-node src/index.ts --action push",
-    "checkout": "ts-node src/index.ts --action checkout",
-    "raise-pr": "ts-node src/index.ts --action raise-pr",
-    "pull-branch": "ts-node src/index.ts --action pull-branch",
-    "pull-review": "ts-node src/index.ts --action pull-review",
+    "start": "ts-node src/index.ts",
+    "pull": "ts-node src/index.ts pull",
+    "push": "ts-node src/index.ts push",
+    "checkout": "ts-node src/index.ts checkout",
+    "raise-pr": "ts-node src/index.ts raise-pr",
+    "pull-branch": "ts-node src/index.ts pull-branch",
+    "pull-review": "ts-node src/index.ts pull-review",
+    "config": "ts-node src/index.ts config",
     "dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "lint:fix": "yarn lint --fix",
@@ -42,13 +44,13 @@
     "@types/yargs": "^17.0.4",
     "@typescript-eslint/eslint-plugin": "^5.2.0",
     "@typescript-eslint/parser": "^5.2.0",
-    "dotenv": "^10.0.0",
     "eslint": "^8.1.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.4.4"
   },
   "dependencies": {
+    "dotenv": "^10.0.0",
     "dir-compare": "^3.3.0",
     "fs-extra": "^10.0.0",
     "git-url-parse": "^12.0.0",

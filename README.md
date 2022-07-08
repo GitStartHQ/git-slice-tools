@@ -30,14 +30,58 @@ A new version of git-slice, super high performance with:
 | `GIT_SLICE_PR_LABELS`                    | Array of labels which git-slice-tools will add into new PR. Ex: ex: `["gitstart","team/frontend-platform"`                                                                                 |
 | `GIT_SLICE_PR_DRAFT`                     | (`true` or `false`). Default is `true`. git-slice-tools would raise new PR as draft PR                                                                                                     |
 
+## Development
+
+To use `git-slice-tools` in dev mode, clone `git-slice-tools` repository
+
+```bash
+# Clone repository
+git clone https://github.com/GitStartHQ/git-slice-tools
+
+# Navigate to source code container folder
+cd git-slice-tools
+
+# yarn install
+yarn
+
+# Prepare environment variables in .env file from .env.example (Please update copied .env file before executing jobs)
+cp .env.example .env
+
+# Execute jobs
+yarn <job_name> [...job_options] [--help] [--version]
+```
+
+We don't recommend to use `nodemon` for development since it could effect production repositories. But in case you really want to use it you can use this form:
+
+```bash
+yarn dev --exec "yarn pull"
+```
+
+## Global CLI
+
+You can install and use `git-slice-tools` globally
+
+```bash
+# Install package globally
+
+# With yarn
+yarn global add https://github.com/GitStartHQ/git-slice-tools#vX.X.X
+
+# With npm
+npm install -g https://github.com/GitStartHQ/git-slice-tools#vX.X.X
+
+# Execute jobs
+git-slice-tools <job_name> [...job_options] [--help] [--version]
+```
+
 ## Jobs
 
-| Job           | Description                                                                                                                                                                                                                                                                                                                             |
+| Name          | Description                                                                                                                                                                                                                                                                                                                             |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `checkout`    | Fetch `origin` and checkout default branch of both upstream and slice repos                                                                                                                                                                                                                                                             |
 | `pull`        | Pull last changes from upstream repo into slice repo                                                                                                                                                                                                                                                                                    |
 | `push`        | Push a branch in slice repo to upstream repo                                                                                                                                                                                                                                                                                            |
-| `raise-pr`    | Raise new PR for branch on upstream repo (GitHub only)                                                                                                                                                                                                                                                                                  |
+| `raise-pr`    | Raise new PR for branch on upstream repo (GitHub only) with details (title/body) from the PR for a branch on slice repo                                                                                                                                                                                                                 |
 | `pull-branch` | Pull last changes of a branch from upstream repo into slice repo. The destination branch in slice repo has the pulling branch but with `upstream-*` prefix. Please note that this job uses `force-push` and the upstream should be updated to date with the default branch of upstream repo otherwise there would be some extra changes |
 | `pull-review` | Pull a PR review from a PR on upstream repo into a PR on slice repo (GitHub only). Please note that if upstream review has comments on code, this job will throw errors if upstream and slice branches don't have the same changes                                                                                                      |
 
@@ -47,6 +91,8 @@ No command arguments needed
 
 ```bash
 yarn checkout
+
+git-slice-tools checkout
 ```
 
 ### Job `pull`
@@ -55,6 +101,8 @@ No command arguments needed
 
 ```bash
 yarn pull
+
+git-slice-tools pull
 ```
 
 ### Job `push`
@@ -69,20 +117,22 @@ Command arguments
 
 ```bash
 yarn push --branch dev-test --message "test: commit message" --force-push false
+
+git-slice-tools push --branch dev-test --message "test: commit message" --force-push false
 ```
 
 ### Job `raise-pr`
 
 Command arguments
 
-| Arg                  | Description                          |
-| -------------------- | ------------------------------------ |
-| `--branch` `-b`      | Name of pushing branch in slice repo |
-| `--title` `-t`       | PR title                             |
-| `--description` `-d` | PR description                       |
+| Arg             | Description                          |
+| --------------- | ------------------------------------ |
+| `--branch` `-b` | Name of pushing branch in slice repo |
 
 ```bash
-yarn raise-pr --branch dev-test --title "The pull request title" --description "The pull request description"
+yarn raise-pr --branch dev-test
+
+git-slice-tools raise-pr --branch dev-test
 ```
 
 ### Job `pull-branch`
@@ -96,6 +146,8 @@ Command arguments
 
 ```bash
 yarn pull-branch --branch dev-test
+
+git-slice-tools pull-branch --branch dev-test
 ```
 
 ### Job `pull-review`
@@ -109,6 +161,8 @@ Command arguments
 
 ```bash
 yarn pull-review --pr-number 123 --pr-review-link https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
+
+git-slice-tools pull-review --pr-number 123 --pr-review-link https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
 ```
 
 ## Future jobs
@@ -116,11 +170,3 @@ yarn pull-review --pr-number 123 --pr-review-link https://github.com/sourcegraph
 | Job                            | Description                                                               |
 | ------------------------------ | ------------------------------------------------------------------------- |
 | GitStart dashboard integration | Support GitStart authentication and fetching repos details from dashboard |
-
-## Development
-
-We recommend to not use `nodemon` while developing since it couldn't effect production repositories. But in case you really want to use it you can use this form:
-
-```bash
-yarn dev --exec "yarn pull"
-```
