@@ -36,7 +36,7 @@ runs:
       shell: bash
 
     - name: Execute `git-slice-tools raise-pr`
-      if: ${{ inputs.push-pr }}
+      if: inputs.push-pr == 'true'
       run: git-slice-tools raise-pr --b "$BRANCH"
       env:
         BRANCH: ${{ inputs.branch }}
