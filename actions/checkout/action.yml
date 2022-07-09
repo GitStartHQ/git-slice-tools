@@ -12,15 +12,19 @@ runs:
           slice-repo
         key: cache-repo-${{ env.GIT_SLICE_CHECKOUT_CACHED_KEY }}
 
-    - run: rm -rf .git
+    - name: Remove .git
+      run: rm -rf .git
+      shell: bash
 
     - name: Install git-slice-tools
       if: steps.cache-repos.outputs.cache-hit != 'true'
       run: yarn global add https://github.com/GitStartHQ/git-slice-tools#v1.1.2
+      shell: bash
 
-    - name: git-slice-tools CHECKOUT
+    - name: Execute `git-slice-tools checkout`
       if: steps.cache-repos.outputs.cache-hit != 'true'
       run: |
         mkdir -p $GIT_SLICE_SLICE_REPO_DIR
         mkdir -p $GIT_SLICE_UPSTREAM_REPO_DIR
         git-slice-tools checkout
+      shell: bash
