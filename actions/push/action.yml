@@ -1,0 +1,43 @@
+name: 'git-slice-tools PUSH'
+description: 'Perform cache and git-slice-tools push and raise-pr jobs'
+inputs:
+  branch:
+    required: true
+  message:
+    required: true
+  force-push:
+    required: false
+    default: false
+  push-pr:
+    required: false
+    default: false
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache repos
+      id: cache-repos
+      uses: actions/cache@v2
+      with:
+        path: |
+          upstream-repo
+          slice-repo
+        key: cache-repo-${{ env.GIT_SLICE_CHECKOUT_CACHED_KEY }}
+
+    - name: Install git-slice-tools
+      run: yarn global add https://github.com/GitStartHQ/git-slice-tools#v1.1.2
+      shell: bash
+
+    - name: Execute `git-slice-tools push`
+      run: git-slice-tools push --m "$MESSAGE" --b "$BRANCH" --force-push $FORCE_PUSH
+      env:
+        FORCE_PUSH: ${{ inputs.force-push }}
+        BRANCH: ${{ inputs.branch }}
+        MESSAGE: ${{ inputs.message }}
+      shell: bash
+
+    - name: Execute `git-slice-tools raise-pr`
+      if: ${{ inputs.push-pr }}
+      run: git-slice-tools raise-pr --b "$BRANCH"
+      env:
+        BRANCH: ${{ inputs.branch }}
+      shell: bash
