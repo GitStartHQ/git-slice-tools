@@ -1,0 +1,88 @@
+# Trigger git-slice push action with pull request comment: /git-slice push -m "<commit message>" [-f] [-pr]
+# -f : Overide pervious push (force push)
+# -pr : Create a PR with the same title and body on the client side
+name: 'git-slice-tools PUSH (trigger by comments)'
+description: 'Perform cache and git-slice-tools push and raise-pr jobs - trigger by comments'
+runs:
+  using: 'composite'
+  steps:
+    - name: Get branch name
+      uses: actions/github-script@v4
+      id: get-pr
+      with:
+        script: |
+          const request = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number
+          }
+          core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+          try {
+            const result = await github.pulls.get(request)
+            return result.data
+          } catch (err) {
+            core.setFailed(`Request failed with error ${err}`)
+          }
+
+    - name: Read commit message for push options
+      uses: actions/github-script@v4
+      id: get-push-options
+      with:
+        result-encoding: string
+        script: |
+          try {
+            await github.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket'
+            });
+
+            const body = context.payload.comment.body.trim()
+            console.log("Detected PR comment: " + body);
+
+            const args = body.replace(/^\s*\/git-slice\s+push\s+/gi, "");
+            const matches = [...args.matchAll(/((-\w+)($|\s+("(.*)"|(\w+)))?)/gi)];
+            const friendlyOptions = {
+              "-m": "message",
+              "-r": "rebase",
+              "-f": "forcePush",
+              "-pr": "raisePR",
+            };
+
+            let pushOptions = {
+              "rebase": false,
+              "forcePush": false,
+              "raisePR": false
+            };
+
+            for (const match of matches) {
+              let value = true;
+
+              if (match[5] || match[4]) {
+                value = (match[5] || match[4]).trim();
+                value = JSON.parse(`{ "test": "${value}" }`).test;
+              }
+
+              if (friendlyOptions[match[2]]) {
+                pushOptions = {
+                  ...pushOptions,
+                  [friendlyOptions[match[2]]]: value,
+                };
+              }
+            }
+
+            console.log("Decoded Args: " + JSON.stringify(pushOptions));
+
+            return JSON.stringify(pushOptions);
+          } catch (err) {
+            core.setFailed(`Request failed with error ${err}`);
+          }
+
+    - name: git-slice-tools PUSH
+      uses: GitStartHQ/git-slice-tools/actions/push@github-actions
+      with:
+        branch: ${{ fromJSON(steps.get-pr.outputs.result).head.ref }}
+        message: ${{ fromJSON(steps.get-push-options.outputs.result).message }}
+        force-push: ${{ fromJSON(steps.get-push-options.outputs.result).forcePush }}
+        push-pr: ${{ fromJSON(steps.get-push-options.outputs.result).raisePR }}
