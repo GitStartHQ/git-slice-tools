@@ -1,0 +1,21 @@
+name: 'git-slice-tools PULL'
+description: 'Perform cache and git-slice-tools pull jobs'
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache repos
+      id: cache-repos
+      uses: actions/cache@v2
+      with:
+        path: |
+          upstream-repo
+          slice-repo
+        key: cache-repo-${{ env.GIT_SLICE_CHECKOUT_CACHED_KEY }}
+
+    - name: Install git-slice-tools
+      run: yarn global add https://github.com/GitStartHQ/git-slice-tools#v1.1.2
+      shell: bash
+
+    - name: Execute `git-slice-tools pull`
+      run: git-slice-tools pull
+      shell: bash
