@@ -1,6 +1,6 @@
 # Trigger git-slice pull-review action with pull request comment: /git-slice pull-review -from https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
 # -from : Link to pull request review (GitHub only)
-name: 'git-slice-tools PULL-REVIEW (trigger by comments)'
+name: 'git-slice-tools PULL-REVIEW-COMMENT (trigger by comments)'
 description: 'Perform cache and git-slice-tools pull-review job - trigger by comments'
 runs:
   using: 'composite'
