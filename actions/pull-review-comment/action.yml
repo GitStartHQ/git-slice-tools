@@ -60,4 +60,4 @@ runs:
       uses: GitStartHQ/git-slice-tools/actions/pull-review@github-actions
       with:
         pr-number: ${{ fromJSON(steps.get-pull-options.outputs.result).prNumber }}
-        pre-review-link: ${{ fromJSON(steps.get-pull-options.outputs.result).prReviewLink }}
+        pr-review-link: ${{ fromJSON(steps.get-pull-options.outputs.result).prReviewLink }}
