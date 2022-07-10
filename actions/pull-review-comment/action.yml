@@ -1,0 +1,63 @@
+# Trigger git-slice pull-review action with pull request comment: /git-slice pull-review -from https://github.com/sourcegraph/sourcegraph/pull/37919#pullrequestreview-1025518547
+# -from : Link to pull request review (GitHub only)
+name: 'git-slice-tools PULL-REVIEW (trigger by comments)'
+description: 'Perform cache and git-slice-tools pull-review job - trigger by comments'
+runs:
+  using: 'composite'
+  steps:
+      - name: Read commit message for pull-review options
+        uses: actions/github-script@v4
+        id: get-pull-options
+        with:
+          result-encoding: string
+          script: |
+            try {
+              await github.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'rocket'
+              });
+
+              const body = context.payload.comment.body.trim()
+              console.log("Detected PR comment: " + body);
+
+              const args = body.replace(/^\s*\/git-slice\s+pull-review\s+/gi, "");
+              const matches = [...args.matchAll(/((-\w+)($|\s+("(.*)"|(\w+)))?)/gi)];
+              const friendlyOptions = {
+                "-from": "prReviewLink"
+              };
+
+              let pullOptions = {
+                "prReviewLink": "",
+                "prNumber": context.issue.number
+              };
+
+              for (const match of matches) {
+                let value = true;
+
+                if (match[5] || match[4]) {
+                  value = (match[5] || match[4]).trim();
+                  value = JSON.parse(`{ "test": "${value}" }`).test;
+                }
+
+                if (friendlyOptions[match[2]]) {
+                  pullOptions = {
+                    ...pullOptions,
+                    [friendlyOptions[match[2]]]: value,
+                  };
+                }
+              }
+
+              console.log("Decoded Args: " + JSON.stringify(pullOptions));
+
+              return JSON.stringify(pullOptions);
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`);
+            }
+
+    - name: git-slice-tools PULL-REVIEW
+      uses: GitStartHQ/git-slice-tools/actions/pull-review@github-actions
+      with:
+        pr-number: ${{ fromJSON(steps.get-pull-options.outputs.result).prNumber }}
+        pre-review-link: ${{ fromJSON(steps.get-pull-options.outputs.result).prReviewLink }}

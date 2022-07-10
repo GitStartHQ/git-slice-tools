@@ -1,0 +1,29 @@
+name: 'git-slice-tools PULL-REVIEW'
+description: 'Perform cache and git-slice-tools pull-review job'
+inputs:
+  pr-number:
+    required: true
+  pr-review-link:
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache repos
+      id: cache-repos
+      uses: actions/cache@v2
+      with:
+        path: |
+          upstream-repo
+          slice-repo
+        key: cache-repo-${{ env.GIT_SLICE_CHECKOUT_CACHED_KEY }}
+
+    - name: Install git-slice-tools
+      run: yarn global add https://github.com/GitStartHQ/git-slice-tools#github-actions
+      shell: bash
+
+    - name: Execute `git-slice-tools pull-review`
+      run: git-slice-tools pull-review --pr-number "$PR_NUMBER" --pr-review-link "$PR_REVIEW_LINK"
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
+        PR_REVIEW_LINK: ${{ inputs.pr-review-link }}
+      shell: bash
