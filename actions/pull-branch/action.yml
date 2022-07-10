@@ -1,5 +1,10 @@
-name: 'git-slice-tools PULL'
-description: 'Perform cache and git-slice-tools pull jobs'
+name: 'git-slice-tools PULL-BRANCH'
+description: 'Perform cache and git-slice-tools pull-branch job'
+inputs:
+  branch:
+    required: true
+  target-branch:
+    required: false
 runs:
   using: 'composite'
   steps:
@@ -16,6 +21,9 @@ runs:
       run: yarn global add https://github.com/GitStartHQ/git-slice-tools#github-actions
       shell: bash
 
-    - name: Execute `git-slice-tools pull`
-      run: git-slice-tools pull
+    - name: Execute `git-slice-tools pull-branch`
+      run: git-slice-tools pull-branch --b "$BRANCH" --target "$TARGET_BRANCH"
+      env:
+        BRANCH: ${{ inputs.branch }}
+        TARGET_BRANCH: ${{ inputs.target-branch }}
       shell: bash
