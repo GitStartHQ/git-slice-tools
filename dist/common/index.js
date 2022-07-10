@@ -193,6 +193,7 @@ var copyFiles = function (git, fromDir, toDir, sliceIgnores, scope) { return __a
                         '**/.git/**'
                     ], sliceIgnores.map(function (x) { return (x.startsWith('**/') ? x : "**/" + x.replace(/^\/+/, '')); }), true).join(','),
                 });
+                (0, logger_1.logExtendLastLine)('Done!');
                 if (!compareResponse.diffSet || compareResponse.diffSet.length === 0) {
                     (0, logger_1.logWriteLine)(scope, "Found 0 diff file(s)!");
                     return [2 /*return*/, []];
