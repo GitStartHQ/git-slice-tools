@@ -58,7 +58,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanAndDeleteLocalBranch = exports.copyFiles = exports.createCommitAndPushCurrentChanges = exports.deleteSliceIgnoresFilesDirs = exports.pullRemoteBranchIntoCurrentBranch = exports.isErrorLike = void 0;
+exports.cleanAndDeleteLocalBranch = exports.copyFiles = exports.createCommitAndPushCurrentChanges = exports.deleteSliceIgnoresFilesDirs = exports.pullRemoteBranchIntoCurrentBranch = exports.delay = exports.isErrorLike = void 0;
 var dir_compare_1 = require("dir-compare");
 var fs_extra_1 = __importDefault(require("fs-extra"));
 var glob_1 = require("glob");
@@ -72,6 +72,10 @@ var isErrorLike = function (value) {
     return typeof value === 'object' && value !== null && ('stack' in value || 'message' in value);
 };
 exports.isErrorLike = isErrorLike;
+var delay = function (time) {
+    return new Promise(function (resolve) { return setTimeout(resolve, time); });
+};
+exports.delay = delay;
 var pullRemoteBranchIntoCurrentBranch = function (logPrefix, git, remoteBranch, currentBranch, ignoreMergeConflictsError, noPush) {
     if (ignoreMergeConflictsError === void 0) { ignoreMergeConflictsError = false; }
     if (noPush === void 0) { noPush = false; }

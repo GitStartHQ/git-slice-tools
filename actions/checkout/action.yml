@@ -18,7 +18,7 @@ runs:
 
     - name: Install git-slice-tools
       if: steps.cache-repos.outputs.cache-hit != 'true'
-      run: yarn global add https://github.com/GitStartHQ/git-slice-tools#v1.1.3
+      run: yarn global add https://github.com/GitStartHQ/git-slice-tools#v1.1.4
       shell: bash
 
     - name: Execute `git-slice-tools checkout`

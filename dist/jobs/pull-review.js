@@ -45,10 +45,10 @@ var octokit_1 = require("octokit");
 var terminal_kit_1 = require("terminal-kit");
 var common_1 = require("../common");
 var pullReview = function (sliceGit, upstreamGit, actionInputs, slicePrNumber, upstreamPrReviewLink) { return __awaiter(void 0, void 0, void 0, function () {
-    var sliceRepo, upstreamRepo, upstreamGitUrlObject, sliceGitUrlObject, upstreamOctokit, sliceOctokit, prReivewLinkRegResult, upstreamPrNumber, upstreamPrReviewNumber, upstreamReview, upstreamReviewComments, sliceReview;
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var sliceRepo, upstreamRepo, upstreamGitUrlObject, sliceGitUrlObject, upstreamOctokit, sliceOctokit, prReivewLinkRegResult, upstreamPrNumber, upstreamPrReviewNumber, upstreamReview, upstreamReviewComments, detailedPullReviewComments, _i, upstreamReviewComments_1, comment, upstreamReviewComment, path, body, user, sliceReview;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    return __generator(this, function (_j) {
+        switch (_j.label) {
             case 0:
                 (0, terminal_kit_1.terminal)('-'.repeat(30) + '\n');
                 (0, terminal_kit_1.terminal)("Performing pull-review job with " + JSON.stringify({ slicePrNumber: slicePrNumber, upstreamPrReviewLink: upstreamPrReviewLink }) + "...\n");
@@ -78,7 +78,7 @@ var pullReview = function (sliceGit, upstreamGit, actionInputs, slicePrNumber, u
                         review_id: upstreamPrReviewNumber,
                     })];
             case 1:
-                upstreamReview = (_c.sent()).data;
+                upstreamReview = (_j.sent()).data;
                 (0, common_1.logExtendLastLine)("Done!");
                 (0, common_1.logWriteLine)('Upstream', "Getting PR review comments...");
                 return [4 /*yield*/, upstreamOctokit.rest.pulls.listCommentsForReview({
@@ -91,7 +91,43 @@ var pullReview = function (sliceGit, upstreamGit, actionInputs, slicePrNumber, u
                         page: 1,
                     })];
             case 2:
-                upstreamReviewComments = (_c.sent()).data;
+                upstreamReviewComments = (_j.sent()).data;
+                (0, common_1.logExtendLastLine)("Done!");
+                (0, common_1.logWriteLine)('Upstream', "Getting PR review comments details...");
+                detailedPullReviewComments = [];
+                _i = 0, upstreamReviewComments_1 = upstreamReviewComments;
+                _j.label = 3;
+            case 3:
+                if (!(_i < upstreamReviewComments_1.length)) return [3 /*break*/, 7];
+                comment = upstreamReviewComments_1[_i];
+                return [4 /*yield*/, upstreamOctokit.rest.pulls.getReviewComment({
+                        owner: upstreamGitUrlObject.owner,
+                        repo: upstreamGitUrlObject.name,
+                        pull_number: upstreamPrNumber,
+                        review_id: upstreamPrReviewNumber,
+                        comment_id: comment.id,
+                    })];
+            case 4:
+                upstreamReviewComment = (_j.sent()).data;
+                path = comment.path, body = comment.body, user = comment.user;
+                detailedPullReviewComments.push({
+                    path: path,
+                    body: "From **_" + (user === null || user === void 0 ? void 0 : user.login) + "_**:\n" + body,
+                    side: (_a = upstreamReviewComment.side) !== null && _a !== void 0 ? _a : undefined,
+                    start_side: (_b = upstreamReviewComment.start_side) !== null && _b !== void 0 ? _b : undefined,
+                    line: (_d = (_c = upstreamReviewComment.original_line) !== null && _c !== void 0 ? _c : upstreamReviewComment.line) !== null && _d !== void 0 ? _d : undefined,
+                    start_line: (_f = (_e = upstreamReviewComment.original_start_line) !== null && _e !== void 0 ? _e : upstreamReviewComment.start_line) !== null && _f !== void 0 ? _f : undefined,
+                });
+                // Just to make sure we don't reach github api limit
+                return [4 /*yield*/, (0, common_1.delay)(500)];
+            case 5:
+                // Just to make sure we don't reach github api limit
+                _j.sent();
+                _j.label = 6;
+            case 6:
+                _i++;
+                return [3 /*break*/, 3];
+            case 7:
                 (0, common_1.logExtendLastLine)("Done!");
                 (0, common_1.logWriteLine)('Slice', "Creating PR review...");
                 return [4 /*yield*/, sliceOctokit.rest.pulls.createReview({
@@ -99,23 +135,11 @@ var pullReview = function (sliceGit, upstreamGit, actionInputs, slicePrNumber, u
                         repo: sliceGitUrlObject.name,
                         pull_number: slicePrNumber,
                         event: 'COMMENT',
-                        body: "Pull request review is synched from " + upstreamPrReviewLink + " by git-slice-tools:\nFrom **_" + ((_a = upstreamReview.user) === null || _a === void 0 ? void 0 : _a.login) + "_**:\n" + ((_b = upstreamReview.body) !== null && _b !== void 0 ? _b : ''),
-                        comments: upstreamReviewComments.map(function (_a) {
-                            var _b, _c;
-                            var path = _a.path, body = _a.body, position = _a.position, line = _a.line, side = _a.side, start_line = _a.start_line, start_side = _a.start_side, user = _a.user, original_position = _a.original_position, original_line = _a.original_line, original_start_line = _a.original_start_line;
-                            return ({
-                                path: path,
-                                body: "From **_" + (user === null || user === void 0 ? void 0 : user.login) + "_**:\n" + body,
-                                position: position !== null && position !== void 0 ? position : original_position,
-                                line: (_b = line !== null && line !== void 0 ? line : original_line) !== null && _b !== void 0 ? _b : undefined,
-                                side: side !== null && side !== void 0 ? side : undefined,
-                                start_line: (_c = start_line !== null && start_line !== void 0 ? start_line : original_start_line) !== null && _c !== void 0 ? _c : undefined,
-                                start_side: start_side !== null && start_side !== void 0 ? start_side : undefined,
-                            });
-                        }),
+                        body: "Pull request review is synched from " + upstreamPrReviewLink + " by git-slice-tools:\nFrom **_" + ((_g = upstreamReview.user) === null || _g === void 0 ? void 0 : _g.login) + "_**:\n" + ((_h = upstreamReview.body) !== null && _h !== void 0 ? _h : ''),
+                        comments: detailedPullReviewComments,
                     })];
-            case 3:
-                sliceReview = (_c.sent()).data;
+            case 8:
+                sliceReview = (_j.sent()).data;
                 (0, common_1.logExtendLastLine)("Done! -> " + sliceReview.html_url);
                 return [2 /*return*/];
         }
