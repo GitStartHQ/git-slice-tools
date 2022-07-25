@@ -13,6 +13,10 @@ export * from './logger'
 export const isErrorLike = (value: unknown): value is ErrorLike =>
     typeof value === 'object' && value !== null && ('stack' in value || 'message' in value)
 
+export const delay = (time: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, time))
+}
+
 export const pullRemoteBranchIntoCurrentBranch = async (
     logPrefix: string,
     git: SimpleGit,

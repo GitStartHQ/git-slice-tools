@@ -2,7 +2,7 @@ import gitUrlParse from 'git-url-parse'
 import { Octokit } from 'octokit'
 import { SimpleGit } from 'simple-git'
 import { terminal } from 'terminal-kit'
-import { logExtendLastLine, logWriteLine } from '../common'
+import { delay, logExtendLastLine, logWriteLine } from '../common'
 import { ActionInputs } from '../types'
 
 export const pullReview = async (
@@ -63,6 +63,44 @@ export const pullReview = async (
 
     logExtendLastLine(`Done!`)
 
+    logWriteLine('Upstream', `Getting PR review comments details...`)
+
+    const detailedPullReviewComments: {
+        path: string
+        position?: number
+        body: string
+        line?: number
+        side?: string
+        start_line?: number
+        start_side?: string
+    }[] = []
+
+    for (const comment of upstreamReviewComments) {
+        const { data: upstreamReviewComment } = await upstreamOctokit.rest.pulls.getReviewComment({
+            owner: upstreamGitUrlObject.owner,
+            repo: upstreamGitUrlObject.name,
+            pull_number: upstreamPrNumber,
+            review_id: upstreamPrReviewNumber,
+            comment_id: comment.id,
+        })
+
+        const { path, body, user } = comment
+
+        detailedPullReviewComments.push({
+            path,
+            body: `From **_${user?.login}_**:\n${body}`,
+            side: upstreamReviewComment.side ?? undefined,
+            start_side: upstreamReviewComment.start_side ?? undefined,
+            line: upstreamReviewComment.original_line ?? upstreamReviewComment.line ?? undefined,
+            start_line: upstreamReviewComment.original_start_line ?? upstreamReviewComment.start_line ?? undefined,
+        })
+
+        // Just to make sure we don't reach github api limit
+        await delay(500)
+    }
+
+    logExtendLastLine(`Done!`)
+
     logWriteLine('Slice', `Creating PR review...`)
 
     const { data: sliceReview } = await sliceOctokit.rest.pulls.createReview({
@@ -73,29 +111,7 @@ export const pullReview = async (
         body: `Pull request review is synched from ${upstreamPrReviewLink} by git-slice-tools:\nFrom **_${
             upstreamReview.user?.login
         }_**:\n${upstreamReview.body ?? ''}`,
-        comments: upstreamReviewComments.map(
-            ({
-                path,
-                body,
-                position,
-                line,
-                side,
-                start_line,
-                start_side,
-                user,
-                original_position,
-                original_line,
-                original_start_line,
-            }) => ({
-                path,
-                body: `From **_${user?.login}_**:\n${body}`,
-                position: position ?? original_position,
-                line: line ?? original_line ?? undefined,
-                side: side ?? undefined,
-                start_line: start_line ?? original_start_line ?? undefined,
-                start_side: start_side ?? undefined,
-            })
-        ),
+        comments: detailedPullReviewComments,
     })
 
     logExtendLastLine(`Done! -> ${sliceReview.html_url}`)
